@@ -10,6 +10,7 @@ import com.bridou_n.beaconscanner.models.LoggingRequest
 import com.bridou_n.beaconscanner.utils.BluetoothManager
 import com.bridou_n.beaconscanner.utils.PreferencesHelper
 import com.bridou_n.beaconscanner.utils.RatingHelper
+import com.bridou_n.beaconscanner.utils.Writer
 import com.bridou_n.beaconscanner.utils.extensionFunctions.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.Flowable
@@ -20,7 +21,6 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
 import io.realm.RealmResults
-import io.realm.Sort
 import org.altbeacon.beacon.Beacon
 import org.altbeacon.beacon.BeaconManager
 import org.altbeacon.beacon.Region
@@ -52,6 +52,10 @@ class BeaconListPresenter(val view: BeaconListContract.View,
     private var numberOfScansSinceLog = 0
     private val MAX_RETRIES = 3
     private var loggingRequests = CompositeDisposable()
+
+    private val writer = Writer("${System.currentTimeMillis()}.txt")
+            .modeSelect(Writer.Companion.Mode.CSV)
+            .addInitialColumn(arrayListOf("time", "id", "rssi"))
 
     override fun setBeaconManager(bm: BeaconManager) {
         beaconManager = bm
