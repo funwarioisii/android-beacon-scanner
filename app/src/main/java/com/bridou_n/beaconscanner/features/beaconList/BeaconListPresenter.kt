@@ -55,7 +55,7 @@ class BeaconListPresenter(val view: BeaconListContract.View,
 
     private val writer = Writer("${System.currentTimeMillis()}.txt")
             .modeSelect(Writer.Companion.Mode.CSV)
-            .addInitialColumn(arrayListOf("time", "id", "rssi"))
+            .addInitialColumn(arrayListOf("id", "rssi", "time"))
 
     override fun setBeaconManager(bm: BeaconManager) {
         beaconManager = bm
@@ -131,7 +131,23 @@ class BeaconListPresenter(val view: BeaconListContract.View,
                     e as Events.RangeBeacon
 
                     handleRating()
+                    val beacons = e.beacons
                     storeBeaconsAround(e.beacons)
+                    beacons.map { b: Beacon ->
+                        val beacon = BeaconSaved(b)
+                        val eddystone = beacon.eddystoneUidData
+                        if (eddystone != null) {
+                            writer.write(arrayListOf(
+                                    eddystone.instanceId.toString().let {
+                                        if (it.startsWith("0x"))
+                                            it.substring(startIndex = 2)
+                                        else
+                                            it
+                                    },
+                                    beacon.rssi.toString(),
+                                    System.currentTimeMillis().toString()))
+                        }
+                    }
                     logToWebhookIfNeeded()
                 }, { err ->
                     view.showGenericError(err.message ?: "")
